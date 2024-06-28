@@ -55,10 +55,7 @@ public class JSONVisitor extends MessageVisitorSupport {
      * @param version
      */
     public JSONVisitor(String name, String version) {
-        payload.put("name", name);
-        payload.put("version", version);
-        this.sep = DEFAULT_SEP;
-        stack.push(payload);
+      this(name,version,DEFAULT_SEP);
     }
 
     /**
@@ -141,7 +138,7 @@ public class JSONVisitor extends MessageVisitorSupport {
 
 
     /**
-     * Maintain the current field index into the HAPI parent segment for human readable names.
+     * Get the nice field name from the parent segment and reset the field value.
      *
      * @param field
      * @param location
@@ -167,7 +164,6 @@ public class JSONVisitor extends MessageVisitorSupport {
      * @throws HL7Exception
      */
     public boolean visit(Primitive type, Location location) throws HL7Exception {
-
 
         JSONObject o = stack.peek();
         // Null?
