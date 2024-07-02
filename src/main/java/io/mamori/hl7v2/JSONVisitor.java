@@ -3,6 +3,7 @@ package io.mamori.hl7v2;
 import ca.uhn.hl7v2.HL7Exception;
 import ca.uhn.hl7v2.Location;
 import ca.uhn.hl7v2.model.*;
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.util.Stack;
@@ -81,7 +82,27 @@ public class JSONVisitor extends MessageVisitorSupport {
     @Override
     public boolean start(Group group, Location location) throws HL7Exception {
         JSONObject o = new JSONObject();
-        stack.peek().put(group.getName(), o);
+        JSONObject parent = stack.peek();
+        String name = group.getName();
+        if (parent.has(name)) {
+
+            if (parent.get(name) instanceof JSONObject) {
+                JSONObject child = parent.getJSONObject(name);
+                parent.remove(name);
+                JSONArray a = new JSONArray();
+                parent.put(name,a);
+                a.put(child);
+                a.put(o);
+            }else {
+                JSONArray a = parent.getJSONArray(name);
+                a.put(o);
+            }
+
+        }else {
+            parent.put(group.getName(), o);
+
+        }
+        System.out.println("Pushing group " + group.getName());
         stack.push(o);
         return super.start(group, location);
     }
@@ -96,6 +117,7 @@ public class JSONVisitor extends MessageVisitorSupport {
      */
     @Override
     public boolean end(Group group, Location location) throws HL7Exception {
+        System.out.println("Popping group " + group.getName());
         stack.pop();
         return super.end(group, location);
     }
@@ -112,6 +134,8 @@ public class JSONVisitor extends MessageVisitorSupport {
     public boolean start(Segment segment, Location location) throws HL7Exception {
         JSONObject o = new JSONObject();
         stack.peek().put(segment.getName(), o);
+
+        System.out.println("Pushing segment " + segment.getName());
         stack.push(o);
 
         // get human readable field names
@@ -132,6 +156,7 @@ public class JSONVisitor extends MessageVisitorSupport {
      */
     @Override
     public boolean end(Segment segment, Location location) throws HL7Exception {
+        System.out.println("Popping segment " + segment.getName());
         stack.pop();
         return super.end(segment, location);
     }
