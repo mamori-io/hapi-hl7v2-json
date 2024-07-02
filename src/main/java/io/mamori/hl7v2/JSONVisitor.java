@@ -102,7 +102,6 @@ public class JSONVisitor extends MessageVisitorSupport {
             parent.put(group.getName(), o);
 
         }
-        System.out.println("Pushing group " + group.getName());
         stack.push(o);
         return super.start(group, location);
     }
@@ -117,7 +116,6 @@ public class JSONVisitor extends MessageVisitorSupport {
      */
     @Override
     public boolean end(Group group, Location location) throws HL7Exception {
-        System.out.println("Popping group " + group.getName());
         stack.pop();
         return super.end(group, location);
     }
@@ -133,9 +131,26 @@ public class JSONVisitor extends MessageVisitorSupport {
     @Override
     public boolean start(Segment segment, Location location) throws HL7Exception {
         JSONObject o = new JSONObject();
-        stack.peek().put(segment.getName(), o);
+        JSONObject parent = stack.peek();
+        String name = segment.getName();
+        if (parent.has(name)) {
 
-        System.out.println("Pushing segment " + segment.getName());
+            if (parent.get(name) instanceof JSONObject) {
+                JSONObject child = parent.getJSONObject(name);
+                parent.remove(name);
+                JSONArray a = new JSONArray();
+                parent.put(name,a);
+                a.put(child);
+                a.put(o);
+            }else {
+                JSONArray a = parent.getJSONArray(name);
+                a.put(o);
+            }
+
+        }else {
+            parent.put(segment.getName(), o);
+
+        }
         stack.push(o);
 
         // get human readable field names
@@ -156,7 +171,6 @@ public class JSONVisitor extends MessageVisitorSupport {
      */
     @Override
     public boolean end(Segment segment, Location location) throws HL7Exception {
-        System.out.println("Popping segment " + segment.getName());
         stack.pop();
         return super.end(segment, location);
     }
